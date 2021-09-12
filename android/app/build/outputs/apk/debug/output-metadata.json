@@ -5,7 +5,7 @@
     "kind": "Directory"
   },
   "applicationId": "com.zainon.stickers_app",
-  "variantName": "processDebugResources",
+  "variantName": "debug",
   "elements": [
     {
       "type": "SINGLE",

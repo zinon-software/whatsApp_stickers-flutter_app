@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:provider/provider.dart';
 import 'package:stickers_app/modals/InstallStickersModal.dart';
 import 'package:stickers_app/modals/StickerListModal.dart';
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => StickerListModel()),
         ChangeNotifierProvider(create: (_) => InstallStickersModal()),
       ],
-      child: MaterialApp(
+      child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'ملصقات عصرية للواتساب',
         theme: ThemeData(

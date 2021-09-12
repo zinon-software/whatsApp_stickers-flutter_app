@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'package:admob_flutter/admob_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_whatsapp_stickers/flutter_whatsapp_stickers.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:stickers_app/Ads_state/adsManager.dart';
 import 'package:stickers_app/components/ReusableImage.dart';
 import 'package:stickers_app/modals/InstallStickersModal.dart';
 import 'package:stickers_app/modals/StickerListModal.dart';
@@ -60,10 +63,28 @@ class _StickerListState extends State<StickerList> {
     }
   }
 
+  AdmobInterstitial interstitialAd;
+
   @override
   void initState() {
     super.initState();
     _loadStickers();
+
+    //Ads
+    interstitialAd = AdmobInterstitial(
+      adUnitId: AdsManager.interstitialAdUnitId,
+      listener: (AdmobAdEvent event, Map<String, dynamic> args) {
+        if (event == AdmobAdEvent.closed) interstitialAd.load();
+      },
+    );
+
+    interstitialAd.load();
+  }
+
+  @override
+  void dispose() {
+    interstitialAd.dispose();
+    super.dispose();
   }
 
   @override
@@ -190,10 +211,10 @@ class _StickerListState extends State<StickerList> {
       child: ListTile(
         onTap: () {
           // هنا يضاف الاعلان
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (BuildContext context) =>
-                StickerPackInformation(stickerList),
-          ));
+
+          interstitialAd.show();
+
+          Get.to(() => StickerPackInformation(stickerList));
         },
         title: Row(
           children: [

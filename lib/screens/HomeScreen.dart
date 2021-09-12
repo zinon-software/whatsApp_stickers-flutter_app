@@ -3,7 +3,6 @@ import 'package:esys_flutter_share/esys_flutter_share.dart';
 import 'package:flutter/material.dart';
 import 'package:stickers_app/Ads_state/adsManager.dart';
 import 'package:stickers_app/screens/StickerList.dart';
-import 'package:stickers_app/screens/StickerList.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatelessWidget {
