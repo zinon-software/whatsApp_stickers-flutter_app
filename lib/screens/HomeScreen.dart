@@ -1,11 +1,32 @@
-import 'package:admob_flutter/admob_flutter.dart';
-import 'package:esys_flutter_share/esys_flutter_share.dart';
+import 'package:esys_flutter_share_plus/esys_flutter_share_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:stickers_app/Ads_state/adsManager.dart';
 import 'package:stickers_app/screens/StickerList.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class HomeScreen extends StatelessWidget {
+import '../ads_state/ads_manager.dart';
+
+class HomeScreen extends StatefulWidget {
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late AdsManager _adsManager;
+
+  @override
+  void initState() {
+    _adsManager = AdsManager();
+
+    super.initState();
+    _adsManager.loadBannerAd();
+  }
+
+  @override
+  void dispose() {
+    _adsManager.disposeBannerAds();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,10 +62,7 @@ class HomeScreen extends StatelessWidget {
       ),
       body: StickerList(),
       bottomNavigationBar: Container(
-        child: AdmobBanner(
-          adUnitId: AdsManager.bannerAdUnitId,
-          adSize: AdmobBannerSize.SMART_BANNER(context),
-        ),
+        child: _adsManager.getBannerAdWidget(),
       ),
     );
   }
@@ -52,8 +70,8 @@ class HomeScreen extends StatelessWidget {
   _launchURL() async {
     const url =
         'https://play.google.com/store/apps/details?id=com.zainon.stickers_app';
-    if (await canLaunch(url)) {
-      await launch(url);
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
     } else {
       throw 'تعذر الإطلاق $url';
     }

@@ -1,16 +1,17 @@
 import 'dart:convert';
-import 'package:admob_flutter/admob_flutter.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_whatsapp_stickers/flutter_whatsapp_stickers.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:stickers_app/Ads_state/adsManager.dart';
 import 'package:stickers_app/components/ReusableImage.dart';
 import 'package:stickers_app/modals/InstallStickersModal.dart';
 import 'package:stickers_app/modals/StickerListModal.dart';
 import 'package:stickers_app/screens/StickerPackInformation.dart';
 import 'package:stickers_app/utils/utils.dart';
+
+import '../ads_state/ads_manager.dart';
 
 class StickerList extends StatefulWidget {
   @override
@@ -63,88 +64,77 @@ class _StickerListState extends State<StickerList> {
     }
   }
 
-  AdmobInterstitial interstitialAd;
+  late AdsManager _adsManager;
 
   @override
   void initState() {
+    _adsManager = AdsManager();
+
     super.initState();
+    _adsManager.loadInterstitialAd();
+
     _loadStickers();
-
-    //Ads
-    interstitialAd = AdmobInterstitial(
-      adUnitId: AdsManager.interstitialAdUnitId,
-      listener: (AdmobAdEvent event, Map<String, dynamic> args) {
-        if (event == AdmobAdEvent.closed) interstitialAd.load();
-      },
-    );
-
-    interstitialAd.load();
   }
 
   @override
   void dispose() {
-    interstitialAd.dispose();
+    _adsManager.disposeBannerAds();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () => SystemNavigator.pop(),
-      child: Consumer<StickerListModel>(
-        builder: (context, sticker, child) {
-          return ListView.separated(
-            itemCount: sticker.stickerListSize,
-            itemBuilder: (context, index) {
-              if (sticker.stickerListSize == 0) {
-                return Container(
-                  child: CircularProgressIndicator(),
-                );
+    return Consumer<StickerListModel>(
+      builder: (context, sticker, child) {
+        return ListView.separated(
+          itemCount: sticker.stickerListSize,
+          itemBuilder: (context, index) {
+            if (sticker.stickerListSize == 0) {
+              return Container(
+                child: CircularProgressIndicator(),
+              );
+            } else {
+              var stickerId = sticker.getStickerList[index]['identifier'];
+              var stickerName = sticker.getStickerList[index]['name'];
+              var stickerPublisher = sticker.getStickerList[index]['publisher'];
+              var stickerTrayIcon =
+                  sticker.getStickerList[index]['tray_image_file'];
+              var tempStickerList = [];
+              var stickers = sticker.getStickerList[index]['stickers'];
+
+              bool stickerInstalled = false;
+              if (Provider.of<InstallStickersModal>(context, listen: false)
+                  .installStickers
+                  .contains(stickerId)) {
+                stickerInstalled = true;
               } else {
-                var stickerId = sticker.getStickerList[index]['identifier'];
-                var stickerName = sticker.getStickerList[index]['name'];
-                var stickerPublisher =
-                    sticker.getStickerList[index]['publisher'];
-                var stickerTrayIcon =
-                    sticker.getStickerList[index]['tray_image_file'];
-                var tempStickerList = List();
-                var stickers = sticker.getStickerList[index]['stickers'];
-
-                bool stickerInstalled = false;
-                if (Provider.of<InstallStickersModal>(context, listen: false)
-                    .installStickers
-                    .contains(stickerId)) {
-                  stickerInstalled = true;
-                } else {
-                  stickerInstalled = false;
-                }
-                tempStickerList
-                    .add(sticker.getStickerList[index]['identifier']);
-                tempStickerList.add(sticker.getStickerList[index]['name']);
-                tempStickerList.add(sticker.getStickerList[index]['publisher']);
-                tempStickerList
-                    .add(sticker.getStickerList[index]['tray_image_file']);
-                tempStickerList.add(sticker.getStickerList[index]['stickers']);
-                tempStickerList.add(stickerInstalled);
-                tempStickerList.add(
-                    Provider.of<InstallStickersModal>(context, listen: false)
-                        .installStickers);
-
-                return stickerPack(
-                  tempStickerList,
-                  stickers,
-                  stickerName,
-                  stickerPublisher,
-                  stickerId,
-                  stickerTrayIcon,
-                  stickerInstalled,
-                );
+                stickerInstalled = false;
               }
-            },
-            separatorBuilder: (_, __) => Divider(),
-          );
-        },
-      ),
+              tempStickerList.add(sticker.getStickerList[index]['identifier']);
+              tempStickerList.add(sticker.getStickerList[index]['name']);
+              tempStickerList.add(sticker.getStickerList[index]['publisher']);
+              tempStickerList
+                  .add(sticker.getStickerList[index]['tray_image_file']);
+              tempStickerList.add(sticker.getStickerList[index]['stickers']);
+              tempStickerList.add(stickerInstalled);
+              tempStickerList.add(
+                  Provider.of<InstallStickersModal>(context, listen: false)
+                      .installStickers);
+
+              return stickerPack(
+                tempStickerList,
+                stickers,
+                stickerName,
+                stickerPublisher,
+                stickerId,
+                stickerTrayIcon,
+                stickerInstalled,
+              );
+            }
+          },
+          separatorBuilder: (_, __) => Divider(),
+        );
+      },
     );
   }
 
@@ -192,15 +182,17 @@ class _StickerListState extends State<StickerList> {
             packageName: WhatsAppPackage.Consumer,
             stickerPackIdentifier: identifier,
             stickerPackName: name,
-            listener: (action, result, {error}) => processResponse(
+            listener: (action, result, {String? error}) async {
+              processResponse(
               action: action,
               result: result,
-              error: error,
+              error: error ?? "",
               successCallback: () async {
                 _checkInstallationStatuses();
               },
               context: context,
-            ),
+            );
+            },
           );
         },
       );
@@ -212,7 +204,7 @@ class _StickerListState extends State<StickerList> {
         onTap: () {
           // هنا يضاف الاعلان
 
-          interstitialAd.show();
+          _adsManager.showInterstitialAd();
 
           Get.to(() => StickerPackInformation(stickerList));
         },

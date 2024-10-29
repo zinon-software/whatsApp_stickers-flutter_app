@@ -1,8 +1,8 @@
-import 'package:admob_flutter/admob_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_whatsapp_stickers/flutter_whatsapp_stickers.dart';
-import 'package:stickers_app/Ads_state/adsManager.dart';
 import 'package:stickers_app/utils/utils.dart';
+
+import '../ads_state/ads_manager.dart';
 
 class StickerPackInformation extends StatefulWidget {
   final List stickerPack;
@@ -41,6 +41,22 @@ class _StickerPackInformationState extends State<StickerPackInformation> {
     print("${stickerPack[6]}");
   }
 
+  late AdsManager _adsManager;
+
+  @override
+  void initState() {
+    _adsManager = AdsManager();
+
+    super.initState();
+    _adsManager.loadBannerAd();
+  }
+
+  @override
+  void dispose() {
+    _adsManager.disposeBannerAds();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     List totalStickers = stickerPack[4];
@@ -55,36 +71,37 @@ class _StickerPackInformationState extends State<StickerPackInformation> {
         ),
       );
     } else {
-      depInstallWidget = RaisedButton(
+      depInstallWidget = ElevatedButton(
         child: Text("أضف الملصقات الى الواتساب"),
-        textColor: Colors.white,
-        color: Colors.teal[900],
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: Colors.teal[900],
+        ),
         onPressed: () async {
           _waStickers.addStickerPack(
             packageName: WhatsAppPackage.Consumer,
             stickerPackIdentifier: stickerPack[0],
             stickerPackName: stickerPack[1],
-            listener: (action, result, {error}) => processResponse(
-              action: action,
-              result: result,
-              error: error,
-              successCallback: () async {
-                setState(() {
-                  _checkInstallationStatuses();
-                });
-              },
-              context: context,
-            ),
+            listener: (action, result, {String? error}) async {
+              processResponse(
+                action: action,
+                result: result,
+                error: error ?? 'Unknown error',
+                successCallback: () {
+                  setState(() {
+                    _checkInstallationStatuses();
+                  });
+                },
+                context: context,
+              );
+            },
           );
         },
       );
     }
     return Scaffold(
       bottomNavigationBar: Container(
-        child: AdmobBanner(
-          adUnitId: AdsManager.bannerAdUnitId,
-          adSize: AdmobBannerSize.SMART_BANNER(context),
-        ),
+        child: _adsManager.getBannerAdWidget(),
       ),
       appBar: AppBar(
         title: Text("${stickerPack[1]} ملصقات"),
@@ -147,7 +164,7 @@ class _StickerPackInformationState extends State<StickerPackInformation> {
                       height: 100,
                     ),
                   );
-                }),
+                },),
           ),
         ],
       ),

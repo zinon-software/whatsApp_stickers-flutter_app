@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class StickerListModel extends ChangeNotifier{
 
-  List stickerList = new List();
+  List stickerList = [];
 
   int get stickerListSize => stickerList.length;
 

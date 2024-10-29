@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class InstallStickersModal extends ChangeNotifier{
 
-  List _installedStickers = new List();
+  List _installedStickers = [];
 
   int get installedStickersSize => _installedStickers.length;
 

@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_whatsapp_stickers/flutter_whatsapp_stickers.dart';
 
-Future<void> processResponse(
-    {StickerPackResult action,
-      bool result,
-      String error,
-      BuildContext context,
-      Function successCallback}) async {
+void processResponse({
+  required StickerPackResult action,
+  required bool result,
+  required String error,
+  required BuildContext context,
+  required Function successCallback,
+}) {
   print("_listener");
   print(action);
   print(result);
   print(error);
 
-  SnackBar snackBar;
+  SnackBar? snackBar;
 
   switch (action) {
     case StickerPackResult.SUCCESS:
@@ -31,8 +32,8 @@ Future<void> processResponse(
       break;
   }
 
-  /// Display a snack bar
-  if (snackBar != null && context != null) {
-    Scaffold.of(context).showSnackBar(snackBar);
+  // عرض SnackBar إذا كان هناك رسالة
+  if (snackBar != null) {
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }
